@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    const express = require('express');
+const bcrypt = require('bcrypt');
+const app = express();
+
+// Middleware to parse form data
+app.use(express.urlencoded({ extended: true }));
+
+// Mock database containing a securely hashed password
+// In production, this data would come from a database like PostgreSQL or MongoDB
+const mockUserDatabase = {
+    username: "user@example.com",
+    // This is a hashed version of the password "SuperSecret123!"
+    passwordHash: "$2b$10$EPXhS4qO3W1k7W2vPZ5uO.O3N3mGzF3B3B3B3B3B3B3B3B3B3B3B" 
+};
+
+app.post('/login-process', async (req, res) => {
+    const { username, password } = req.body;
+
+    // 1. Check if the user exists
+    if (username !== mockUserDatabase.username) {
+        return res.status(401).send("Invalid credentials.");
+    }
+
+    try {
+        // 2. Safely compare the submitted password against the stored hash
+        const match = await bcrypt.compare(password, mockUserDatabase.passwordHash);
+
+        if (match) {
+            // 3. Establish a session or issue a JSON Web Token (JWT)
+            res.send("Login successful! Welcome back.");
+        } else {
+            res.status(401).send("Invalid credentials.");
+        }
+    } catch (error) {
+        res.status(500).send("An error occurred on the server.");
+    }
+});
+
+app.listen(3000, () => console.log('Authentication server running on port 3000'));
+
+</body>
+</html>
